@@ -2,7 +2,7 @@
 export const API_BASE_URL: string = 'https://strava-api-handler-jp7zta2ltq-uc.a.run.app/api';
 
 // Strava redirect URI - make sure this matches EXACTLY what's registered with Strava
-export const STRAVA_REDIRECT_URI: string = 'https://https://effortless-eighty--effortless-eighty-d132a.europe-west4.hosted.app/exchange_token';
+export const STRAVA_REDIRECT_URI: string = 'https://effortless-eighty--effortless-eighty-d132a.europe-west4.hosted.app/exchange_token';
 
 // Backend API endpoints
 export const API_AUTH_URL: string = `${API_BASE_URL}/auth-url`;
