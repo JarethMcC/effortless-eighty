@@ -1,8 +1,8 @@
 // Backend API base URL
-export const API_BASE_URL: string = 'http://localhost:5000/api';
+export const API_BASE_URL: string = 'https://jarethm.com/api';
 
 // Strava redirect URI - make sure this matches EXACTLY what's registered with Strava
-export const STRAVA_REDIRECT_URI: string = 'http://localhost:3000/exchange_token';
+export const STRAVA_REDIRECT_URI: string = 'https://effortlesseighty.com/exchange_token';
 
 // Backend API endpoints
 export const API_AUTH_URL: string = `${API_BASE_URL}/auth-url`;
