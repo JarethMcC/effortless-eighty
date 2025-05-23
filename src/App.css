@@ -1,0 +1,394 @@
+.App {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #f4f4f4;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.App-header {
+  background-color: #fc4c02; /* Strava orange */
+  padding: 20px;
+  color: white;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.App-header h1 {
+  margin: 0;
+  font-size: 2em;
+}
+
+.login-button, .logout-button {
+  background-color: #fff;
+  color: #fc4c02;
+  border: 2px solid #fc4c02;
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  margin-top: 10px;
+}
+
+.login-button:hover, .logout-button:hover {
+  background-color: #fc4c02;
+  color: white;
+}
+
+.loading-text, .error-text, .info-text {
+  margin-top: 20px;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.error-text {
+  color: #d9534f; /* Bootstrap danger color */
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+/* Welcome intro section styles (only for non-authenticated users) */
+.intro-section {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  text-align: left;
+}
+
+.intro-section h2 {
+  color: #fc4c02;
+  font-size: 2em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.intro-section h3 {
+  color: #333;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  font-size: 1.4em;
+}
+
+.intro-content {
+  line-height: 1.6;
+}
+
+.intro-content p {
+  margin-bottom: 15px;
+  color: #444;
+  font-size: 1.1em;
+}
+
+.intro-content ul {
+  padding-left: 25px;
+  margin-bottom: 20px;
+}
+
+.intro-content li {
+  margin-bottom: 8px;
+  color: #444;
+}
+
+.login-prompt {
+  margin-top: 30px;
+  text-align: center;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+}
+
+.login-prompt p {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+/* New responsive container for the main content */
+.main-content-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+/* Charts container styles (for logged-in view) */
+.charts-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  flex: 1;
+  min-width: 300px;
+  max-width: 900px;
+}
+
+/* Adjust chart wrapper height for new charts */
+.chart-wrapper {
+  position: relative;
+  height: 300px;
+  margin-bottom: 30px; /* Increased from 20px for better spacing between multiple charts */
+}
+
+.chart-pie-wrapper {
+  height: 350px;
+}
+
+/* Add divider between charts */
+.chart-wrapper:not(:last-child) {
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 15px;
+}
+
+/* Activity list styles (for logged-in view) */
+.activities-container {
+  text-align: left;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  flex: 1;
+  min-width: 300px;
+  max-width: 900px;
+}
+
+.activities-container h2 {
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.8em;
+  text-align: center;
+}
+
+.week-group {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+}
+
+.week-group:last-child {
+  border-bottom: none;
+}
+
+.week-header {
+  color: #fc4c02;
+  margin-bottom: 10px;
+  font-size: 1.3em;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.week-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+}
+
+.activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.activity-item {
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 10px;
+}
+
+.activity-item h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.intensity-source-chip {
+  font-size: 0.7em;
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: normal;
+}
+
+.activity-item p {
+  margin: 5px 0;
+}
+
+.intensity-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  color: white;
+  font-size: 0.85em;
+}
+
+.intensity-tag.easy {
+  background-color: #5cb85c;
+}
+
+.intensity-tag.hard {
+  background-color: #d9534f;
+}
+
+.intensity-tag.n\/a {
+  background-color: #777;
+}
+
+/* Card style (for various containers) */
+.card-style {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Activity link styling */
+.strava-activity-link {
+  color: #333;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+/* View on Strava link - meets Strava API requirements */
+.view-on-strava-link {
+  color: #FC5200;
+  text-decoration: none;
+  font-weight: bold;
+  float: right;
+  margin-left: 15px;
+  transition: opacity 0.2s;
+}
+
+.view-on-strava-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* Strava connect button styling */
+.strava-connect-btn-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.strava-connect-btn {
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+  max-width: 100%;
+  height: auto;
+}
+
+.strava-connect-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.strava-connect-btn:active {
+  transform: translateY(0);
+  opacity: 0.8;
+}
+
+/* Footer styling */
+.App-footer {
+  margin-top: 40px;
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid #eee;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 600px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.creator-credit {
+  font-size: 14px;
+  color: #666;
+}
+
+.creator-credit a {
+  color: #fc4c02;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.creator-credit a:hover {
+  color: #e34500;
+  text-decoration: underline;
+}
+
+.strava-powered-by-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.strava-powered-by {
+  height: 30px;
+  width: auto;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.strava-powered-by:hover {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (min-width: 1200px) {
+  .main-content-container {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+  
+  .charts-container, .activities-container {
+    width: calc(50% - 10px);
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .week-summary {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .charts-container, .activities-container {
+    padding: 15px;
+    width: 100%;
+  }
+  
+  .chart-wrapper {
+    height: 250px;
+  }
+}
