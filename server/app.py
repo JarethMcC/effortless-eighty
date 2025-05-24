@@ -31,7 +31,7 @@ if not STRAVA_CLIENT_ID or not STRAVA_CLIENT_SECRET:
     logger.error("Strava API credentials are missing! Check your .env file.")
 
 # Verify redirect URI is registered with Strava
-EXPECTED_REDIRECT_URI = 'http://localhost:3000/exchange_token'
+EXPECTED_REDIRECT_URI = 'https://effortless-eighty-frontend.onrender.com/exchange_token'
 logger.info(f"Expected redirect URI: {EXPECTED_REDIRECT_URI}")
 
 @app.route('/api/auth-url', methods=['GET'])
