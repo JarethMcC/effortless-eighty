@@ -1,8 +1,8 @@
 // Backend API base URL
-export const API_BASE_URL: string = 'https://effortlesseighty.com/api';
+export const API_BASE_URL: string = 'https://effortless-eighty.onrender.com/api';
 
 // Strava redirect URI _ make sure this matches EXACTLY what's registered with Strava
-export const STRAVA_REDIRECT_URI: string = 'https://effortless-eighty-frontend.onrender.com/exchange_token';
+export const STRAVA_REDIRECT_URI: string = 'https://effortlesseighty.com/exchange_token';
 
 // API endpoints
 export const API_AUTH_URL: string = `${API_BASE_URL}/auth-url`;
