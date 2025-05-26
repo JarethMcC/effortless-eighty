@@ -7,18 +7,14 @@ import logging
 import time
 from dotenv import load_dotenv
 
-# Configure logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Strava API constants
 STRAVA_CLIENT_ID = os.getenv('STRAVA_CLIENT_ID')
 STRAVA_CLIENT_SECRET = os.getenv('STRAVA_CLIENT_SECRET')
 STRAVA_AUTHORIZATION_URL = 'https://www.strava.com/oauth/authorize'
@@ -26,11 +22,9 @@ STRAVA_TOKEN_URL = 'https://www.strava.com/api/v3/oauth/token'
 STRAVA_ACTIVITIES_URL = 'https://www.strava.com/api/v3/athlete/activities'
 STRAVA_ATHLETE_ZONES_URL = 'https://www.strava.com/api/v3/athlete/zones'
 
-# Check that credentials are loaded
 if not STRAVA_CLIENT_ID or not STRAVA_CLIENT_SECRET:
     logger.error("Strava API credentials are missing! Check your .env file.")
 
-# Verify redirect URI is registered with Strava
 EXPECTED_REDIRECT_URI = 'https://effortlesseighty.com/exchange_token'
 logger.info(f"Expected redirect URI: {EXPECTED_REDIRECT_URI}")
 
@@ -57,7 +51,7 @@ def make_token_request_with_retry(payload, max_retries=3):
             retries += 1
             if retries < max_retries:
                 logger.warning(f"Network error during token exchange: {str(e)}. Retrying...")
-                time.sleep(1)  # Wait before retry
+                time.sleep(1)
             else:
                 logger.error(f"Failed to exchange token after {max_retries} attempts: {str(e)}")
                 raise
@@ -77,7 +71,6 @@ def exchange_token():
             logger.warning("No authorization code provided in request")
             return jsonify({"error": "No authorization code provided"}), 400
 
-        # Create payload for Strava API
         payload = {
             'client_id': STRAVA_CLIENT_ID,
             'client_secret': STRAVA_CLIENT_SECRET,
@@ -86,14 +79,11 @@ def exchange_token():
         }
 
         logger.info(f"Exchanging code for token with payload: {json.dumps({**payload, 'client_secret': '[REDACTED]'})}")
-
-        # Make request to Strava with retry logic
+        
         response = make_token_request_with_retry(payload)
-
-        # Log response details
         status_code = response.status_code
         logger.info(f"Token exchange response status: {status_code}")
-
+        
         if status_code != 200:
             error_msg = f"Strava API error: {status_code}"
             try:
@@ -106,19 +96,19 @@ def exchange_token():
                 else:
                     error_msg += f" - {json.dumps(error_data)}"
             except:
-                error_body = response.text[:500]  # Limit to 500 chars
+                error_body = response.text[:500]
                 logger.error(f"Token exchange error body: {error_body}")
                 error_msg += f" - {error_body}"
-
+            
             return jsonify({"error": error_msg}), status_code
-
-        # Process successful response
+        
         token_data = response.json()
-        # Redact sensitive info before logging
-        log_safe_data = {k: v if k not in ('access_token', 'refresh_token') else '[REDACTED]'
-                          for k, v in token_data.items()}
+        log_safe_data = {
+            k: v if k not in ('access_token', 'refresh_token') else '[REDACTED]' 
+            for k, v in token_data.items()
+        }
         logger.info(f"Token exchange successful: {json.dumps(log_safe_data)}")
-
+        
         return jsonify(token_data)
 
     except Exception as e:
@@ -134,7 +124,6 @@ def get_activities():
     if not access_token:
         return jsonify({"error": "No access token provided"}), 401
 
-    # Forward all query parameters
     params = {k: v for k, v in request.args.items()}
 
     try:
@@ -198,7 +187,7 @@ def refresh_token():
                 error_msg += f" - {response.text[:200]}"
             logger.error(f"Token refresh error: {error_msg}")
             return jsonify({"error": error_msg}), response.status_code
-
+        
         return jsonify(response.json())
     except requests.RequestException as e:
         logger.error(f"Error refreshing token: {str(e)}")

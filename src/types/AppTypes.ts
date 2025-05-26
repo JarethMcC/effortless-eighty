@@ -1,5 +1,4 @@
-import { StravaActivity } from './strava'; // Assuming strava.ts is also in src/types/
-
+import { StravaActivity } from './strava';
 
 export interface HeartRateZoneRange {
   min: number;
@@ -12,14 +11,13 @@ export interface AthleteHeartRateZones {
   zones: HeartRateZoneRange[];
 }
 
-
 export enum ActivityIntensity {
   EASY = 'Easy',
   HARD = 'Hard',
   NA = 'N/A',
 }
 
-export interface StravaActivityWithIntensity extends StravaActivity { // Extends base StravaActivity
+export interface StravaActivityWithIntensity extends StravaActivity {
   intensity: ActivityIntensity;
   intensitySource?: 'HR (Zones)' | 'HR (Fixed Threshold)' | 'N/A (No HR)';
 }

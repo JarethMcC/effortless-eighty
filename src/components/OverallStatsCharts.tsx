@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pie, Line, Bar, Chart } from 'react-chartjs-2';
 import {
-  Chart as ChartJS, // This is the key import for ChartJS itself
+  Chart as ChartJS,
   ArcElement,
   Tooltip,
   Legend,
@@ -12,9 +12,8 @@ import {
   Title,
   Filler,
   BarElement,
-} from 'chart.js'; // Ensure 'chart.js' is installed
+} from 'chart.js';
 import { GroupedActivitiesWithStats } from '../types/AppTypes';
-
 
 ChartJS.register(
   ArcElement,
@@ -29,24 +28,21 @@ ChartJS.register(
   BarElement
 );
 
-
 const formatWeekRangeForChart = (weekStartDate: Date): string => {
-    const endDate = new Date(weekStartDate);
-    endDate.setDate(weekStartDate.getDate() + 6);
-    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-    const startStr = weekStartDate.toLocaleDateString(undefined, options);
-    const endStr = endDate.toLocaleDateString(undefined, options);
-    return `${startStr} - ${endStr}`;
+  const endDate = new Date(weekStartDate);
+  endDate.setDate(weekStartDate.getDate() + 6);
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  const startStr = weekStartDate.toLocaleDateString(undefined, options);
+  const endStr = endDate.toLocaleDateString(undefined, options);
+  return `${startStr} - ${endStr}`;
 };
-
 
 const formatDurationForTooltip = (seconds: number): string => {
-    if (isNaN(seconds) || seconds < 0) return '0h 0m';
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return `${h}h ${m}m`;
+  if (isNaN(seconds) || seconds < 0) return '0h 0m';
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours}h ${minutes}m`;
 };
-
 
 interface OverallStatsChartsProps {
   groupedData: GroupedActivitiesWithStats | null;
@@ -57,7 +53,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     return <p className="info-text">Not enough activity data to display overall charts.</p>;
   }
 
-  // 1. Calculate Overall Stats for Pie Chart
+  // Calculate Overall Stats for Pie Chart
   let totalEasyTime = 0;
   let totalHardTime = 0;
   let totalNaTime = 0;
@@ -69,17 +65,16 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
   });
   const totalTrackedTimeOverall = totalEasyTime + totalHardTime;
 
-
   const pieChartData = {
     labels: ['Easy Time', 'Hard Time', 'N/A Time'],
     datasets: [
       {
         label: 'Time Distribution (Last 4 Weeks)',
-        data: [totalEasyTime, totalHardTime, totalNaTime].map(time => parseFloat((time / 3600).toFixed(2))), // Show in hours
+        data: [totalEasyTime, totalHardTime, totalNaTime].map(time => parseFloat((time / 3600).toFixed(2))),
         backgroundColor: [
-          'rgba(75, 192, 192, 0.6)', // Greenish for Easy
-          'rgba(255, 99, 132, 0.6)',  // Reddish for Hard
-          'rgba(201, 203, 207, 0.6)', // Grey for N/A
+          'rgba(75, 192, 192, 0.6)',
+          'rgba(255, 99, 132, 0.6)',
+          'rgba(201, 203, 207, 0.6)',
         ],
         borderColor: [
           'rgba(75, 192, 192, 1)',
@@ -90,7 +85,8 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
       },
     ],
   };
-   const pieOptions = {
+
+  const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -107,14 +103,13 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
               label += ': ';
             }
             if (context.parsed !== null) {
-              // context.parsed is already in hours from data transformation
               label += `${context.parsed.toFixed(2)} hours`;
 
               let percentage = 0;
               const totalSum = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
               if (totalSum > 0) {
-                  percentage = (context.parsed / totalSum) * 100;
-                  label += ` (${percentage.toFixed(1)}%)`;
+                percentage = (context.parsed / totalSum) * 100;
+                label += ` (${percentage.toFixed(1)}%)`;
               }
             }
             return label;
@@ -124,11 +119,8 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     }
   };
 
-
-  // 2. Prepare Data for Weekly Trend Line Chart (% Hard Time)
-  // Ensure weeks are sorted chronologically for the line chart
+  // Prepare Data for Weekly Trend Line Chart (% Hard Time)
   const sortedWeekKeys = Object.keys(groupedData).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-
   const lineChartLabels = sortedWeekKeys.map(weekKey => formatWeekRangeForChart(new Date(weekKey)));
   
   const hardPercentages = sortedWeekKeys.map(weekKey => {
@@ -175,7 +167,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
       legend: {
         position: 'top' as const,
       },
-       tooltip: {
+      tooltip: {
         callbacks: {
           label: function(context: any) {
             let label = context.dataset.label || '';
@@ -185,11 +177,11 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
             if (context.parsed.y !== null) {
               label += `${context.parsed.y}%`;
             }
-            // Add total time for that week
+            
             const weekKey = sortedWeekKeys[context.dataIndex];
             if (weekKey && groupedData[weekKey]) {
-                const weekTotalTime = groupedData[weekKey].totalTrackedTime;
-                label += ` (of ${formatDurationForTooltip(weekTotalTime)})`;
+              const weekTotalTime = groupedData[weekKey].totalTrackedTime;
+              label += ` (of ${formatDurationForTooltip(weekTotalTime)})`;
             }
             return label;
           }
@@ -197,7 +189,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
       }
     },
     scales: {
-      yPercentage: { // Ensure 'yPercentage' matches yAxisID if used
+      yPercentage: {
         type: 'linear' as const,
         display: true,
         position: 'left' as const,
@@ -208,15 +200,15 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
           text: 'Percentage of Tracked Time'
         },
         ticks: {
-            callback: function(value: any) {
-                return value + "%"
-            }
+          callback: function(value: any) {
+            return value + "%"
+          }
         }
       }
     }
   };
 
-  // 3. NEW: Weekly Training Volume Chart
+  // Weekly Training Volume Chart
   const weeklyTotalHours = sortedWeekKeys.map(weekKey => {
     return parseFloat((groupedData[weekKey].totalTime / 3600).toFixed(2));
   });
@@ -310,8 +302,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     }
   };
 
-  // 4. NEW: Weekly Ideal vs Actual Intensity Ratio
-  // Calculate 80/20 target and actual percentages
+  // Weekly Ideal vs Actual Intensity Ratio
   const targetEasyPercentage = 80;
   const targetHardPercentage = 20;
 
