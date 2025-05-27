@@ -42,16 +42,35 @@ def get_auth_url():
 def make_token_request_with_retry(payload, max_retries=3):
     """Make token request with retry logic"""
     retries = 0
+    backoff_factor = 1  # Start with 1 second, then 2, then 4 seconds between retries
+    
     while retries < max_retries:
         try:
             logger.info(f"Attempting token exchange (attempt {retries+1}/{max_retries})")
             response = requests.post(STRAVA_TOKEN_URL, data=payload, timeout=10)
+            
+            # Check if response is a 5xx server error we should retry
+            if 500 <= response.status_code < 600:
+                logger.warning(f"Received {response.status_code} status from Strava API. Retrying...")
+                retries += 1
+                if retries < max_retries:
+                    wait_time = backoff_factor * (2 ** (retries - 1))  # Exponential backoff
+                    logger.info(f"Waiting {wait_time} seconds before retry...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    logger.error(f"Failed after {max_retries} attempts: received {response.status_code} from API")
+                    return response
+            
+            # Not a 5xx error, return the response
             return response
+            
         except (requests.ConnectionError, requests.Timeout) as e:
             retries += 1
             if retries < max_retries:
-                logger.warning(f"Network error during token exchange: {str(e)}. Retrying...")
-                time.sleep(1)
+                wait_time = backoff_factor * (2 ** (retries - 1))
+                logger.warning(f"Network error during token exchange: {str(e)}. Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
             else:
                 logger.error(f"Failed to exchange token after {max_retries} attempts: {str(e)}")
                 raise
@@ -127,32 +146,102 @@ def get_activities():
     params = {k: v for k, v in request.args.items()}
 
     try:
-        response = requests.get(
-            STRAVA_ACTIVITIES_URL,
-            headers={'Authorization': f'Bearer {access_token}'},
-            params=params
-        )
-        response.raise_for_status()
-        return jsonify(response.json())
+        retries = 0
+        max_retries = 3
+        backoff_factor = 1
+        
+        while retries <= max_retries:
+            try:
+                logger.info(f"Fetching activities (attempt {retries+1}/{max_retries+1})")
+                response = requests.get(
+                    STRAVA_ACTIVITIES_URL,
+                    headers={'Authorization': f'Bearer {access_token}'},
+                    params=params,
+                    timeout=15
+                )
+                
+                # Check if we got a 5xx error to retry
+                if 500 <= response.status_code < 600:
+                    retries += 1
+                    if retries <= max_retries:
+                        wait_time = backoff_factor * (2 ** (retries - 1))
+                        logger.warning(f"Received {response.status_code} from Strava API. Retrying in {wait_time} seconds...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error(f"Failed to fetch activities after {max_retries+1} attempts: received {response.status_code}")
+                        break
+                
+                # Process successful response or non-5xx error
+                response.raise_for_status()
+                return jsonify(response.json())
+                
+            except (requests.ConnectionError, requests.Timeout) as e:
+                retries += 1
+                if retries <= max_retries:
+                    wait_time = backoff_factor * (2 ** (retries - 1))
+                    logger.warning(f"Network error fetching activities: {str(e)}. Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    raise
+        
+        # If we get here, we've exhausted retries with 5xx errors
+        return jsonify({"error": f"Failed to fetch activities after {max_retries+1} attempts"}), 500
+        
     except requests.RequestException as e:
         logger.error(f"Error fetching activities: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/athlete/zones', methods=['GET'])
 def get_athlete_zones():
-    """Get athlete zones"""
+    """Get athlete zones with retry on 500 errors"""
     access_token = request.headers.get('Authorization', '').replace('Bearer ', '')
 
     if not access_token:
         return jsonify({"error": "No access token provided"}), 401
 
     try:
-        response = requests.get(
-            STRAVA_ATHLETE_ZONES_URL,
-            headers={'Authorization': f'Bearer {access_token}'}
-        )
-        response.raise_for_status()
-        return jsonify(response.json())
+        retries = 0
+        max_retries = 3
+        backoff_factor = 1
+        
+        while retries <= max_retries:
+            try:
+                logger.info(f"Fetching athlete zones (attempt {retries+1}/{max_retries+1})")
+                response = requests.get(
+                    STRAVA_ATHLETE_ZONES_URL,
+                    headers={'Authorization': f'Bearer {access_token}'},
+                    timeout=15
+                )
+                
+                # Check if we got a 5xx error to retry
+                if 500 <= response.status_code < 600:
+                    retries += 1
+                    if retries <= max_retries:
+                        wait_time = backoff_factor * (2 ** (retries - 1))
+                        logger.warning(f"Received {response.status_code} from Strava API. Retrying in {wait_time} seconds...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        logger.error(f"Failed to fetch athlete zones after {max_retries+1} attempts: received {response.status_code}")
+                        break
+                
+                # Process successful response or non-5xx error
+                response.raise_for_status()
+                return jsonify(response.json())
+                
+            except (requests.ConnectionError, requests.Timeout) as e:
+                retries += 1
+                if retries <= max_retries:
+                    wait_time = backoff_factor * (2 ** (retries - 1))
+                    logger.warning(f"Network error fetching athlete zones: {str(e)}. Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    raise
+        
+        # If we get here, we've exhausted retries with 5xx errors
+        return jsonify({"error": f"Failed to fetch athlete zones after {max_retries+1} attempts"}), 500
+        
     except requests.RequestException as e:
         logger.error(f"Error fetching athlete zones: {str(e)}")
         return jsonify({"error": str(e)}), 500
