@@ -145,6 +145,11 @@ def get_activities():
 
     params = {k: v for k, v in request.args.items()}
 
+    if 'after' not in params:
+        fifteen_weeks_ago = int(time.time() - (9072000))
+        params['after'] = fifteen_weeks_ago
+        logger.info(f"Limiting activities to last 15 weeks (after {fifteen_weeks_ago})")
+
     try:
         retries = 0
         max_retries = 3
