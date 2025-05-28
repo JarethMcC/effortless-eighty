@@ -137,61 +137,97 @@ def exchange_token():
 
 @app.route('/api/activities', methods=['GET'])
 def get_activities():
-    """Get athlete activities"""
+    """Get athlete activities with pagination"""
     access_token = request.headers.get('Authorization', '').replace('Bearer ', '')
 
     if not access_token:
         return jsonify({"error": "No access token provided"}), 401
 
     params = {k: v for k, v in request.args.items()}
-
+    
     if 'after' not in params:
-        fifteen_weeks_ago = int(time.time() - (9072000))
+        fifteen_weeks_ago = int(time.time() - (15 * 7 * 24 * 60 * 60))
         params['after'] = fifteen_weeks_ago
         logger.info(f"Limiting activities to last 15 weeks (after {fifteen_weeks_ago})")
-
+    
     try:
-        retries = 0
-        max_retries = 3
-        backoff_factor = 1
+        all_activities = []
+        page = 1
+        per_page = int(params.get('per_page', 50))
+        max_pages = int(params.get('max_pages', 5))  # Safety limit
         
-        while retries <= max_retries:
-            try:
-                logger.info(f"Fetching activities (attempt {retries+1}/{max_retries+1})")
-                response = requests.get(
-                    STRAVA_ACTIVITIES_URL,
-                    headers={'Authorization': f'Bearer {access_token}'},
-                    params=params,
-                    timeout=15
-                )
+        # Set pagination parameters
+        pagination_params = params.copy()
+        pagination_params['per_page'] = per_page
+        
+        while page <= max_pages:
+            pagination_params['page'] = page
+            logger.info(f"Fetching activities page {page} with per_page={per_page}")
+            
+            retries = 0
+            max_retries = 3
+            backoff_factor = 1
+            response = None
+            
+            # Handle retries for each page request
+            while retries <= max_retries and response is None:
+                try:
+                    logger.info(f"Fetching activities page {page} (attempt {retries+1}/{max_retries+1})")
+                    response = requests.get(
+                        STRAVA_ACTIVITIES_URL,
+                        headers={'Authorization': f'Bearer {access_token}'},
+                        params=pagination_params,
+                        timeout=15
+                    )
+                    
+                    # Check if we got a 5xx error to retry
+                    if 500 <= response.status_code < 600:
+                        retries += 1
+                        if retries <= max_retries:
+                            wait_time = backoff_factor * (2 ** (retries - 1))
+                            logger.warning(f"Received {response.status_code} from Strava API. Retrying in {wait_time} seconds...")
+                            time.sleep(wait_time)
+                            response = None  # Reset response to trigger retry
+                            continue
                 
-                # Check if we got a 5xx error to retry
-                if 500 <= response.status_code < 600:
+                except (requests.ConnectionError, requests.Timeout) as e:
                     retries += 1
                     if retries <= max_retries:
                         wait_time = backoff_factor * (2 ** (retries - 1))
-                        logger.warning(f"Received {response.status_code} from Strava API. Retrying in {wait_time} seconds...")
+                        logger.warning(f"Network error fetching activities: {str(e)}. Retrying in {wait_time} seconds...")
                         time.sleep(wait_time)
-                        continue
                     else:
-                        logger.error(f"Failed to fetch activities after {max_retries+1} attempts: received {response.status_code}")
-                        break
+                        logger.error(f"Network error after {max_retries+1} attempts: {str(e)}")
+                        raise
+            
+            # If we couldn't get a response after retries, break pagination loop
+            if response is None:
+                logger.error(f"Failed to fetch activities page {page} after {max_retries+1} attempts")
+                return jsonify({"error": f"Failed to fetch activities page {page} after {max_retries+1} attempts"}), 500
                 
-                # Process successful response or non-5xx error
+            # Handle non-5xx errors and process results
+            try:
                 response.raise_for_status()
-                return jsonify(response.json())
+                page_activities = response.json()
                 
-            except (requests.ConnectionError, requests.Timeout) as e:
-                retries += 1
-                if retries <= max_retries:
-                    wait_time = backoff_factor * (2 ** (retries - 1))
-                    logger.warning(f"Network error fetching activities: {str(e)}. Retrying in {wait_time} seconds...")
-                    time.sleep(wait_time)
-                else:
-                    raise
+                # Add activities from this page to our result
+                all_activities.extend(page_activities)
+                logger.info(f"Received {len(page_activities)} activities on page {page}")
+                
+                # If we got fewer activities than requested, we've reached the end
+                if len(page_activities) < per_page:
+                    logger.info(f"Reached end of activities at page {page}")
+                    break
+                    
+                # Move to next page
+                page += 1
+                
+            except requests.HTTPError as e:
+                logger.error(f"HTTP error when fetching page {page}: {str(e)}")
+                return jsonify({"error": f"Failed to fetch activities: {str(e)}"}), response.status_code
         
-        # If we get here, we've exhausted retries with 5xx errors
-        return jsonify({"error": f"Failed to fetch activities after {max_retries+1} attempts"}), 500
+        logger.info(f"Successfully fetched a total of {len(all_activities)} activities across {page} pages")
+        return jsonify(all_activities)
         
     except requests.RequestException as e:
         logger.error(f"Error fetching activities: {str(e)}")
