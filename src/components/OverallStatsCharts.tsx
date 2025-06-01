@@ -53,13 +53,9 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
   const [viewMode, setViewMode] = useState<'weekly' | 'overall'>('weekly');
   const [weekRange, setWeekRange] = useState<number>(4);
 
-  if (!groupedData || Object.keys(groupedData).length === 0) {
-    return <p className="info-text">Not enough activity data to display overall charts.</p>;
-  }
-
-  // Filter data based on selected week range
+  // Filter data based on selected week range - moved before conditional return
   const filteredGroupedData = useMemo(() => {
-    if (!groupedData) return null;
+    if (!groupedData || Object.keys(groupedData).length === 0) return null;
     
     // Sort week keys by date (most recent first)
     const sortedWeekKeys = Object.keys(groupedData).sort((a, b) => 
@@ -80,18 +76,21 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     return filteredData;
   }, [groupedData, weekRange]);
 
+  // Early return if no data after the useMemo hook
+  if (!filteredGroupedData || Object.keys(filteredGroupedData).length === 0) {
+    return <p className="info-text">Not enough activity data to display overall charts.</p>;
+  }
+
   // Calculate Overall Stats for charts based on filtered data
   let totalEasyTime = 0;
   let totalHardTime = 0;
   let totalNaTime = 0;
 
-  if (filteredGroupedData) {
-    Object.values(filteredGroupedData).forEach(week => {
-      totalEasyTime += week.easyTime;
-      totalHardTime += week.hardTime;
-      totalNaTime += week.naTime;
-    });
-  }
+  Object.values(filteredGroupedData).forEach(week => {
+    totalEasyTime += week.easyTime;
+    totalHardTime += week.hardTime;
+    totalNaTime += week.naTime;
+  });
   
   const totalTrackedTimeOverall = totalEasyTime + totalHardTime;
   const easyPercentageOverall = totalTrackedTimeOverall > 0 
