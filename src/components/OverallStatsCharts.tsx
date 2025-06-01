@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pie, Line, Bar, Chart } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -49,6 +49,9 @@ interface OverallStatsChartsProps {
 }
 
 const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) => {
+  // Add state to track which view is selected
+  const [viewMode, setViewMode] = useState<'weekly' | 'overall'>('weekly');
+
   if (!groupedData || Object.keys(groupedData).length === 0) {
     return <p className="info-text">Not enough activity data to display overall charts.</p>;
   }
@@ -64,7 +67,28 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     totalNaTime += week.naTime;
   });
   const totalTrackedTimeOverall = totalEasyTime + totalHardTime;
+  const easyPercentageOverall = totalTrackedTimeOverall > 0 
+    ? Math.round((totalEasyTime / totalTrackedTimeOverall) * 100) 
+    : 0;
+  const hardPercentageOverall = totalTrackedTimeOverall > 0 
+    ? Math.round((totalHardTime / totalTrackedTimeOverall) * 100) 
+    : 0;
 
+  // Prepare data for weekly charts
+  const sortedWeekKeys = Object.keys(groupedData).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  const lineChartLabels = sortedWeekKeys.map(weekKey => formatWeekRangeForChart(new Date(weekKey)));
+  
+  const hardPercentages = sortedWeekKeys.map(weekKey => {
+    const week = groupedData[weekKey];
+    return week.totalTrackedTime > 0 ? Math.round((week.hardTime / week.totalTrackedTime) * 100) : 0;
+  });
+
+  const easyPercentages = sortedWeekKeys.map(weekKey => {
+    const week = groupedData[weekKey];
+    return week.totalTrackedTime > 0 ? Math.round((week.easyTime / week.totalTrackedTime) * 100) : 0;
+  });
+
+  // Create pie chart data - used in both views
   const pieChartData = {
     labels: ['Easy Time', 'Hard Time', 'N/A Time'],
     datasets: [
@@ -119,20 +143,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     }
   };
 
-  // Prepare Data for Weekly Trend Line Chart (% Hard Time)
-  const sortedWeekKeys = Object.keys(groupedData).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-  const lineChartLabels = sortedWeekKeys.map(weekKey => formatWeekRangeForChart(new Date(weekKey)));
-  
-  const hardPercentages = sortedWeekKeys.map(weekKey => {
-    const week = groupedData[weekKey];
-    return week.totalTrackedTime > 0 ? Math.round((week.hardTime / week.totalTrackedTime) * 100) : 0;
-  });
-
-  const easyPercentages = sortedWeekKeys.map(weekKey => {
-    const week = groupedData[weekKey];
-    return week.totalTrackedTime > 0 ? Math.round((week.easyTime / week.totalTrackedTime) * 100) : 0;
-  });
-
+  // Weekly view charts data
   const lineChartData = {
     labels: lineChartLabels,
     datasets: [
@@ -389,24 +400,188 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     }
   };
 
+  // New Overall View Charts
+  
+  // Overall Intensity Distribution Chart
+  const overallIntensityData = {
+    labels: ['Easy', 'Hard'],
+    datasets: [
+      {
+        label: 'Intensity Distribution',
+        data: [easyPercentageOverall, hardPercentageOverall],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.6)',
+          'rgba(255, 99, 132, 0.6)'
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(255, 99, 132, 1)'
+        ],
+        borderWidth: 1,
+      },
+      {
+        label: 'Target Distribution',
+        data: [80, 20],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(255, 99, 132, 0.2)'
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(255, 99, 132, 1)'
+        ],
+        borderWidth: 1,
+        borderDash: [5, 5]
+      }
+    ]
+  };
+
+  const overallIntensityOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y' as const,
+    plugins: {
+      title: {
+        display: true,
+        text: 'Overall Intensity Distribution vs Target',
+        font: { size: 16 }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            let label = context.dataset.label || '';
+            if (label) label += ': ';
+            if (context.parsed.x !== null) {
+              label += `${context.parsed.x}%`;
+            }
+            return label;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        min: 0,
+        max: 100,
+        title: {
+          display: true,
+          text: 'Percentage'
+        },
+        ticks: {
+          callback: function(value: any) {
+            return value + "%";
+          }
+        }
+      }
+    }
+  };
+
+  // Overall Time Distribution Gauge Chart
+  const totalTimeInHours = parseFloat(((totalEasyTime + totalHardTime + totalNaTime) / 3600).toFixed(2));
+  const averageWeeklyHours = parseFloat((totalTimeInHours / sortedWeekKeys.length).toFixed(2));
+
+  const overallTimeGaugeData = {
+    labels: ['Easy', 'Hard', 'N/A'],
+    datasets: [
+      {
+        label: 'Hours',
+        data: [
+          parseFloat((totalEasyTime / 3600).toFixed(2)), 
+          parseFloat((totalHardTime / 3600).toFixed(2)), 
+          parseFloat((totalNaTime / 3600).toFixed(2))
+        ],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.6)',
+          'rgba(255, 99, 132, 0.6)',
+          'rgba(201, 203, 207, 0.6)'
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(201, 203, 207, 1)'
+        ],
+        borderWidth: 1,
+      }
+    ]
+  };
+
+  const overallTimeGaugeOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      title: {
+        display: true,
+        text: `Total Training Hours: ${totalTimeInHours} (Avg: ${averageWeeklyHours}/week)`,
+        font: { size: 16 }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            let label = context.dataset.label || '';
+            if (label) label += ': ';
+            if (context.parsed !== null) {
+              label += `${context.parsed} hours`;
+            }
+            return label;
+          }
+        }
+      }
+    }
+  };
+
   return (
     <div className="charts-container card-style">
       <h3>Overall Stats (Last 4 Weeks)</h3>
+      
+      {/* Add toggle buttons */}
+      <div className="view-toggle-container">
+        <button 
+          className={`view-toggle-btn ${viewMode === 'weekly' ? 'active' : ''}`}
+          onClick={() => setViewMode('weekly')}
+        >
+          Weekly Breakdown
+        </button>
+        <button 
+          className={`view-toggle-btn ${viewMode === 'overall' ? 'active' : ''}`}
+          onClick={() => setViewMode('overall')}
+        >
+          Overall Summary
+        </button>
+      </div>
+      
+      {/* Always show the pie chart in both views */}
       <div className="chart-wrapper chart-pie-wrapper">
         { (totalEasyTime > 0 || totalHardTime > 0 || totalNaTime > 0) ?
             <Pie data={pieChartData} options={pieOptions} /> :
             <p className="info-text">No time recorded for pie chart.</p>
         }
       </div>
-      <div className="chart-wrapper chart-line-wrapper">
-        <Line data={lineChartData} options={lineChartOptions} />
-      </div>
-      <div className="chart-wrapper">
-        <Bar data={volumeChartData} options={volumeChartOptions} />
-      </div>
-      <div className="chart-wrapper">
-        <Chart type="bar" data={weeklyRatioData} options={weeklyRatioOptions} />
-      </div>
+      
+      {/* Conditionally render charts based on selected view */}
+      {viewMode === 'weekly' ? (
+        // Weekly view charts
+        <>
+          <div className="chart-wrapper chart-line-wrapper">
+            <Line data={lineChartData} options={lineChartOptions} />
+          </div>
+          <div className="chart-wrapper">
+            <Bar data={volumeChartData} options={volumeChartOptions} />
+          </div>
+          <div className="chart-wrapper">
+            <Chart type="bar" data={weeklyRatioData} options={weeklyRatioOptions} />
+          </div>
+        </>
+      ) : (
+        // Overall view charts
+        <>
+          <div className="chart-wrapper">
+            <Bar data={overallIntensityData} options={overallIntensityOptions} />
+          </div>
+          <div className="chart-wrapper">
+            <Bar data={overallTimeGaugeData} options={overallTimeGaugeOptions} />
+          </div>
+        </>
+      )}
     </div>
   );
 };
