@@ -322,7 +322,7 @@ const App: React.FC = () => {
     return processAndGroupActivities(rawActivities, athleteHRZones);
   }, [rawActivities, athleteHRZones]);
 
-  // Memoized for Charts (filters rawActivities to 4 weeks, then processes)
+  // Memoized for Charts (filters rawActivities to 8 weeks instead of 4, then processes)
   const processedAndGroupedActivitiesForCharts = useMemo<GroupedActivitiesWithStats | null>(() => {
     if (!rawActivities || rawActivities.length === 0) return null;
 
@@ -332,21 +332,21 @@ const App: React.FC = () => {
     mondayOfCurrentWeek.setDate(today.getDate() - currentDayOfWeek + (currentDayOfWeek === 0 ? -6 : 1));
     mondayOfCurrentWeek.setHours(0, 0, 0, 0);
 
-    const filterStartDateFor4Weeks = new Date(mondayOfCurrentWeek);
-    filterStartDateFor4Weeks.setDate(mondayOfCurrentWeek.getDate() - (3 * 7)); // 4-week window
+    const filterStartDateFor8Weeks = new Date(mondayOfCurrentWeek);
+    filterStartDateFor8Weeks.setDate(mondayOfCurrentWeek.getDate() - (7 * 7)); // 8-week window
 
-    const fourWeekActivities = rawActivities.filter(activity => {
+    const eightWeekActivities = rawActivities.filter(activity => {
       if (!activity.start_date_local) return false;
       try {
         const activityDate = new Date(activity.start_date_local);
-        return !isNaN(activityDate.getTime()) && activityDate >= filterStartDateFor4Weeks;
+        return !isNaN(activityDate.getTime()) && activityDate >= filterStartDateFor8Weeks;
       } catch (e) { 
           console.warn(`Error parsing date for chart filtering (activity ID ${activity.id}): ${activity.start_date_local}`, e);
           return false; 
       }
     });
     
-    return processAndGroupActivities(fourWeekActivities, athleteHRZones);
+    return processAndGroupActivities(eightWeekActivities, athleteHRZones);
   }, [rawActivities, athleteHRZones]);
 
   const isLoading = loadingActivities || loadingZones;

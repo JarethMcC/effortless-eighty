@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Pie, Line, Bar, Chart } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -49,23 +49,50 @@ interface OverallStatsChartsProps {
 }
 
 const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) => {
-  // Add state to track which view is selected
+  // State for tracking view mode and week range
   const [viewMode, setViewMode] = useState<'weekly' | 'overall'>('weekly');
+  const [weekRange, setWeekRange] = useState<number>(4);
 
   if (!groupedData || Object.keys(groupedData).length === 0) {
     return <p className="info-text">Not enough activity data to display overall charts.</p>;
   }
 
-  // Calculate Overall Stats for Pie Chart
+  // Filter data based on selected week range
+  const filteredGroupedData = useMemo(() => {
+    if (!groupedData) return null;
+    
+    // Sort week keys by date (most recent first)
+    const sortedWeekKeys = Object.keys(groupedData).sort((a, b) => 
+      new Date(b).getTime() - new Date(a).getTime()
+    );
+    
+    // Take only the selected number of weeks (or all if not enough)
+    const selectedWeekKeys = sortedWeekKeys.slice(0, weekRange);
+    
+    // Create a new object with only the selected weeks
+    const filteredData: GroupedActivitiesWithStats = {};
+    selectedWeekKeys.forEach(key => {
+      if (groupedData[key]) {
+        filteredData[key] = groupedData[key];
+      }
+    });
+    
+    return filteredData;
+  }, [groupedData, weekRange]);
+
+  // Calculate Overall Stats for charts based on filtered data
   let totalEasyTime = 0;
   let totalHardTime = 0;
   let totalNaTime = 0;
 
-  Object.values(groupedData).forEach(week => {
-    totalEasyTime += week.easyTime;
-    totalHardTime += week.hardTime;
-    totalNaTime += week.naTime;
-  });
+  if (filteredGroupedData) {
+    Object.values(filteredGroupedData).forEach(week => {
+      totalEasyTime += week.easyTime;
+      totalHardTime += week.hardTime;
+      totalNaTime += week.naTime;
+    });
+  }
+  
   const totalTrackedTimeOverall = totalEasyTime + totalHardTime;
   const easyPercentageOverall = totalTrackedTimeOverall > 0 
     ? Math.round((totalEasyTime / totalTrackedTimeOverall) * 100) 
@@ -75,16 +102,19 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     : 0;
 
   // Prepare data for weekly charts
-  const sortedWeekKeys = Object.keys(groupedData).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  const sortedWeekKeys = filteredGroupedData ? 
+    Object.keys(filteredGroupedData).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()) : 
+    [];
+    
   const lineChartLabels = sortedWeekKeys.map(weekKey => formatWeekRangeForChart(new Date(weekKey)));
   
   const hardPercentages = sortedWeekKeys.map(weekKey => {
-    const week = groupedData[weekKey];
+    const week = filteredGroupedData![weekKey];
     return week.totalTrackedTime > 0 ? Math.round((week.hardTime / week.totalTrackedTime) * 100) : 0;
   });
 
   const easyPercentages = sortedWeekKeys.map(weekKey => {
-    const week = groupedData[weekKey];
+    const week = filteredGroupedData![weekKey];
     return week.totalTrackedTime > 0 ? Math.round((week.easyTime / week.totalTrackedTime) * 100) : 0;
   });
 
@@ -93,7 +123,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     labels: ['Easy Time', 'Hard Time', 'N/A Time'],
     datasets: [
       {
-        label: 'Time Distribution (Last 4 Weeks)',
+        label: `Time Distribution (Last ${weekRange} Weeks)`,
         data: [totalEasyTime, totalHardTime, totalNaTime].map(time => parseFloat((time / 3600).toFixed(2))),
         backgroundColor: [
           'rgba(75, 192, 192, 0.6)',
@@ -172,7 +202,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     plugins: {
       title: {
         display: true,
-        text: 'Weekly Intensity Distribution Trend',
+        text: `Weekly Intensity Distribution Trend (Last ${weekRange} Weeks)`,
         font: { size: 16 }
       },
       legend: {
@@ -190,8 +220,8 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
             }
             
             const weekKey = sortedWeekKeys[context.dataIndex];
-            if (weekKey && groupedData[weekKey]) {
-              const weekTotalTime = groupedData[weekKey].totalTrackedTime;
+            if (weekKey && filteredGroupedData![weekKey]) {
+              const weekTotalTime = filteredGroupedData![weekKey].totalTrackedTime;
               label += ` (of ${formatDurationForTooltip(weekTotalTime)})`;
             }
             return label;
@@ -221,19 +251,19 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
 
   // Weekly Training Volume Chart
   const weeklyTotalHours = sortedWeekKeys.map(weekKey => {
-    return parseFloat((groupedData[weekKey].totalTime / 3600).toFixed(2));
+    return parseFloat((filteredGroupedData![weekKey].totalTime / 3600).toFixed(2));
   });
   
   const weeklyEasyHours = sortedWeekKeys.map(weekKey => {
-    return parseFloat((groupedData[weekKey].easyTime / 3600).toFixed(2));
+    return parseFloat((filteredGroupedData![weekKey].easyTime / 3600).toFixed(2));
   });
   
   const weeklyHardHours = sortedWeekKeys.map(weekKey => {
-    return parseFloat((groupedData[weekKey].hardTime / 3600).toFixed(2));
+    return parseFloat((filteredGroupedData![weekKey].hardTime / 3600).toFixed(2));
   });
   
   const weeklyNaHours = sortedWeekKeys.map(weekKey => {
-    return parseFloat((groupedData[weekKey].naTime / 3600).toFixed(2));
+    return parseFloat((filteredGroupedData![weekKey].naTime / 3600).toFixed(2));
   });
 
   const volumeChartData = {
@@ -275,7 +305,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     plugins: {
       title: {
         display: true,
-        text: 'Weekly Training Volume',
+        text: `Weekly Training Volume (Last ${weekRange} Weeks)`,
         font: { size: 16 }
       },
       tooltip: {
@@ -367,7 +397,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     plugins: {
       title: {
         display: true,
-        text: '80/20 Target vs Actual',
+        text: `80/20 Target vs Actual (Last ${weekRange} Weeks)`,
         font: { size: 16 }
       },
       tooltip: {
@@ -400,9 +430,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     }
   };
 
-  // New Overall View Charts
-  
-  // Overall Intensity Distribution Chart
+  // Overall view charts
   const overallIntensityData = {
     labels: ['Easy', 'Hard'],
     datasets: [
@@ -443,7 +471,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     plugins: {
       title: {
         display: true,
-        text: 'Overall Intensity Distribution vs Target',
+        text: `Overall Intensity Distribution vs Target (Last ${weekRange} Weeks)`,
         font: { size: 16 }
       },
       tooltip: {
@@ -478,7 +506,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
 
   // Overall Time Distribution Gauge Chart
   const totalTimeInHours = parseFloat(((totalEasyTime + totalHardTime + totalNaTime) / 3600).toFixed(2));
-  const averageWeeklyHours = parseFloat((totalTimeInHours / sortedWeekKeys.length).toFixed(2));
+  const averageWeeklyHours = parseFloat((totalTimeInHours / (sortedWeekKeys.length || 1)).toFixed(2));
 
   const overallTimeGaugeData = {
     labels: ['Easy', 'Hard', 'N/A'],
@@ -511,7 +539,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
     plugins: {
       title: {
         display: true,
-        text: `Total Training Hours: ${totalTimeInHours} (Avg: ${averageWeeklyHours}/week)`,
+        text: `Total Training Hours: ${totalTimeInHours} (Avg: ${averageWeeklyHours}/week) - Last ${weekRange} Weeks`,
         font: { size: 16 }
       },
       tooltip: {
@@ -531,22 +559,39 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
 
   return (
     <div className="charts-container card-style">
-      <h3>Overall Stats (Last 4 Weeks)</h3>
+      <h3>Overall Stats</h3>
       
-      {/* Add toggle buttons */}
-      <div className="view-toggle-container">
-        <button 
-          className={`view-toggle-btn ${viewMode === 'weekly' ? 'active' : ''}`}
-          onClick={() => setViewMode('weekly')}
-        >
-          Weekly Breakdown
-        </button>
-        <button 
-          className={`view-toggle-btn ${viewMode === 'overall' ? 'active' : ''}`}
-          onClick={() => setViewMode('overall')}
-        >
-          Overall Summary
-        </button>
+      {/* Chart control container with view toggle and week range selector */}
+      <div className="chart-controls-container">
+        <div className="view-toggle-container">
+          <button 
+            className={`view-toggle-btn ${viewMode === 'weekly' ? 'active' : ''}`}
+            onClick={() => setViewMode('weekly')}
+          >
+            Weekly Breakdown
+          </button>
+          <button 
+            className={`view-toggle-btn ${viewMode === 'overall' ? 'active' : ''}`}
+            onClick={() => setViewMode('overall')}
+          >
+            Overall Summary
+          </button>
+        </div>
+        
+        <div className="week-range-selector">
+          <label htmlFor="week-range">Show data for:</label>
+          <select 
+            id="week-range" 
+            value={weekRange} 
+            onChange={(e) => setWeekRange(parseInt(e.target.value, 10))}
+          >
+            <option value="4">4 weeks</option>
+            <option value="5">5 weeks</option>
+            <option value="6">6 weeks</option>
+            <option value="7">7 weeks</option>
+            <option value="8">8 weeks</option>
+          </select>
+        </div>
       </div>
       
       {/* Always show the pie chart in both views */}
