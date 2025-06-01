@@ -397,6 +397,9 @@ const App: React.FC = () => {
               <div className="creator-credit">
                 © 2025 <a href="https://github.com/jarethmcc" target="_blank" rel="noopener noreferrer">Jareth McCardell</a>
               </div>
+              <div className="footer-links">
+                <Link to="/patch-notes" className="footer-link">Patch Notes</Link>
+              </div>
               <div className="strava-powered-by-container">
                 <img 
                   src={stravaPoweredByLogo} 
@@ -404,9 +407,6 @@ const App: React.FC = () => {
                   className="strava-powered-by"
                 />
               </div>
-            </div>
-            <div className="footer-links">
-              <Link to="/patch-notes" className="footer-link">Patch Notes</Link>
             </div>
           </div>
         </footer>
