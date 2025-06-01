@@ -421,6 +421,24 @@
   text-decoration: underline;
 }
 
+.footer-links {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.footer-link {
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: #fc4c02;
+  text-decoration: underline;
+}
+
 .strava-powered-by-container {
   display: flex;
   justify-content: center;
@@ -438,7 +456,71 @@
   opacity: 1;
 }
 
-/* Responsive adjustments */
+/* Patch Notes Styles */
+.patch-notes-container {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: left;
+  padding: 30px;
+}
+
+.patch-notes-container h2 {
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 2em;
+  text-align: center;
+}
+
+.patch-note-item {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #eee;
+}
+
+.patch-note-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.patch-note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.patch-note-header h3 {
+  color: #fc4c02;
+  margin: 0;
+  font-size: 1.4em;
+}
+
+.patch-note-date {
+  color: #777;
+  font-size: 0.9em;
+}
+
+.patch-note-description {
+  margin-bottom: 15px;
+  color: #555;
+  font-size: 1.1em;
+}
+
+.patch-note-changes {
+  margin-left: 20px;
+  padding-left: 15px;
+  border-left: 3px solid #fc4c02;
+}
+
+.patch-note-changes li {
+  margin-bottom: 8px;
+  color: #444;
+  line-height: 1.5;
+}
+
 @media (min-width: 1200px) {
   .main-content-container {
     flex-wrap: nowrap;
@@ -469,5 +551,18 @@
   .chart-controls-container {
     flex-direction: column;
     align-items: center;
+  }
+
+  .patch-note-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .patch-note-date {
+    margin-top: 5px;
+  }
+  
+  .patch-notes-container {
+    padding: 20px 15px;
   }
 }

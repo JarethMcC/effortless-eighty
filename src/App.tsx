@@ -1,9 +1,10 @@
 // src/App.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { StravaActivity, StravaTokenResponse } from './types/strava';
 import OverallStatsCharts from './components/OverallStatsCharts';
+import PatchNotes from './components/PatchNotes';
 import './App.css';
 import stravaConnectBtn from './assets/btn_strava_connect_with_orange.svg';
 import stravaPoweredByLogo from './assets/api_logo_pwrdBy_strava_horiz_orange.svg';
@@ -371,6 +372,7 @@ const App: React.FC = () => {
         </header>
         <Routes>
           <Route path="/exchange_token" element={<OAuthCallback setAccessToken={setAccessToken} setError={setError} />} />
+          <Route path="/patch-notes" element={<PatchNotes />} />
           <Route
             path="/"
             element={
@@ -402,6 +404,9 @@ const App: React.FC = () => {
                   className="strava-powered-by"
                 />
               </div>
+            </div>
+            <div className="footer-links">
+              <Link to="/patch-notes" className="footer-link">Patch Notes</Link>
             </div>
           </div>
         </footer>

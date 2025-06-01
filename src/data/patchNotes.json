@@ -1,0 +1,27 @@
+[
+  {
+    "version": "1.1.0",
+    "date": "01-06-2025",
+    "title": "View Toggle & Week Range Selection",
+    "description": "Added ability to toggle between weekly breakdown and overall summary views, plus configurable week range selection.",
+    "changes": [
+      "Added toggle buttons to switch between Weekly Breakdown and Overall Summary views",
+      "Implemented week range selection (4-8 weeks) for chart data",
+      "Enhanced chart displays with improved tooltips and data visualization",
+      "Fixed various UI responsiveness issues"
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "28-05-2025",
+    "title": "Initial Release",
+    "description": "First public release of Effortless Eighty.",
+    "changes": [
+      "Basic tracking and analysis of Strava activities",
+      "80/20 intensity analysis based on heart rate zones",
+      "Weekly training volume visualization",
+      "Activity details with intensity categorization",
+      "Strava API integration with secure authentication"
+    ]
+  }
+]
