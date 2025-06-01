@@ -462,6 +462,29 @@
   margin: 0 auto;
   text-align: left;
   padding: 30px;
+  position: relative; /* For positioning the back button */
+}
+
+.patch-notes-navigation {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.back-button {
+  display: inline-block;
+  padding: 8px 15px;
+  background-color: #f0f0f0;
+  color: #333;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.2s, color 0.2s;
+  border: 1px solid #ddd;
+}
+
+.back-button:hover {
+  background-color: #e0e0e0;
+  color: #000;
 }
 
 .patch-notes-container h2 {
@@ -510,15 +533,17 @@
 }
 
 .patch-note-changes {
-  margin-left: 20px;
-  padding-left: 15px;
-  border-left: 3px solid #fc4c02;
+  margin-left: 0; /* Adjusted from 20px */
+  padding-left: 0; /* Adjusted from 15px */
+  border-left: 3px solid #fc4c02; /* Kept border for visual structure */
+  list-style-type: none; /* Remove bullet points */
 }
 
 .patch-note-changes li {
   margin-bottom: 8px;
   color: #444;
   line-height: 1.5;
+  padding-left: 15px; /* Add padding to align text with the border */
 }
 
 @media (min-width: 1200px) {

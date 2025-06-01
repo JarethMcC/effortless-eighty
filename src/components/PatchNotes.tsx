@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import patchNotesData from '../data/patchNotes.json';
 
 interface PatchNote {
@@ -42,6 +43,11 @@ const PatchNotes: React.FC = () => {
 
   return (
     <div className="patch-notes-container card-style">
+      <div className="patch-notes-navigation">
+        <Link to="/" className="back-button">
+          &larr; Back to Home
+        </Link>
+      </div>
       <h2>Patch Notes</h2>
       {loading ? (
         <p className="loading-text">Loading patch notes...</p>
