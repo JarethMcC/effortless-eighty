@@ -570,9 +570,10 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
             To get closer to the 80/20 goal, aim to keep more workouts in your easy heart-rate zone. 
             This easy heart rate zone is based on your Zone 2 heart rate set in your Strava heart rate zones.
             <br>
-            if you would like to read more about the 80/20 training method, you can read the following article:
-            <a href="https://www.runnersworld.com/uk/training/motivation/a27718661/what-is-80-20-running/" target="_blank" rel="noopener noreferrer">
-              The 80/20 Rule in Endurance Training
+            if you would like to read more about the 80/20 training method, you can read the following article:<br>
+            <a href="https://www.runnersworld.com/uk/training/motivation/a27718661/what-is-80-20-running/" target="_blank" rel="noopener noreferrer"> 
+              What is 80/20 running?
+            </a>
           </p>
         )}
       </div>
