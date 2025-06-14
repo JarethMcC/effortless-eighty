@@ -322,7 +322,8 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
             return `Total: ${total.toFixed(2)} hours`;
           }
         }
-      },
+      }
+    },
     scales: {
       x: {
         stacked: true,
