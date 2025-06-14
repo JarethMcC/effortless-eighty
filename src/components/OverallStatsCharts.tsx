@@ -322,8 +322,7 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
             return `Total: ${total.toFixed(2)} hours`;
           }
         }
-      }
-    },
+      },
     scales: {
       x: {
         stacked: true,
@@ -559,7 +558,18 @@ const OverallStatsCharts: React.FC<OverallStatsChartsProps> = ({ groupedData }) 
   return (
     <div className="charts-container card-style">
       <h3>Overall Stats</h3>
-      
+      {/* Overall goal summary and advice */}
+      <div className="overall-goal-summary" style={{ marginBottom: '16px' }}>
+        <p>
+          <strong>Current Ratio (Easy / Hard):</strong>
+          {' '}{easyPercentageOverall}% / {hardPercentageOverall}%
+        </p>
+        {Math.abs(easyPercentageOverall - targetEasyPercentage) > 10 && (
+          <p className="overall-goal-advice" style={{ color: '#d9534f' }}>
+            To get closer to the 80/20 goal, aim to keep more workouts in your easy heart-rate zone (below your threshold). This advice is based on your Zone 2 Strava zone if set.
+          </p>
+        )}
+      </div>
       {/* Chart control container with view toggle and week range selector */}
       <div className="chart-controls-container">
         <div className="view-toggle-container">
